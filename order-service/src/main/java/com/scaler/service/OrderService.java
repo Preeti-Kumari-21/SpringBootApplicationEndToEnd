@@ -7,14 +7,17 @@ import com.scaler.dto.UserResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 
 @Service
 public class OrderService {
     @Autowired
     private UserClient userClient;
 
-    @CircuitBreaker(name="userService", fallbackMethod = "userServiceFallback")
+    @Retry(name="userService" , fallbackMethod = "userServiceFallback")
+    @CircuitBreaker(name="userService")
     public OrderResponseDTO createOrder(int userId){
+        System.out.println("Calling user-service for userId: " + userId);
         UserResponseDTO userResponseDTO = userClient.getUserById(userId);
 
         return new OrderResponseDTO(
@@ -23,7 +26,7 @@ public class OrderService {
                 "Order created Successfully");
     }
 
-    public OrderResponseDTO userServiceFallback(int userId , Exception ex){
+    public OrderResponseDTO userServiceFallback(int userId , Throwable ex){
         return new OrderResponseDTO(
                 userId,
                 "Unavailable",
