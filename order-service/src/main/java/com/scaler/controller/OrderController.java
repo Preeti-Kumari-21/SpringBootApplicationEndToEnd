@@ -14,8 +14,8 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @GetMapping("/{userId}")
-    public OrderResponseDTO createOrder(@PathVariable int userId){
-        return orderService.createOrder(userId);
+    @GetMapping("/{userId}/{productId}")
+    public OrderResponseDTO createOrder(@PathVariable int userId , @PathVariable int productId){
+        return orderService.createOrder(userId , productId);
     }
 }
