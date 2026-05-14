@@ -32,12 +32,14 @@ public class OrderService {
             throw new RuntimeException("Product out of stock");
         }
 
+        ProductResponseDTO updatedProduct = productClient.reduceQuantity(productId);
+
         return new OrderResponseDTO(
                 userResponseDTO.getId(),
                 userResponseDTO.getName(),
-                productResponseDTO.getId(),
-                productResponseDTO.getName(),
-                productResponseDTO.getPrice(),
+                updatedProduct.getId(),
+                updatedProduct.getName(),
+                updatedProduct.getPrice(),
                 "Order created Successfully");
     }
 

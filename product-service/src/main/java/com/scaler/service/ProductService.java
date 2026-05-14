@@ -2,6 +2,8 @@ package com.scaler.service;
 
 import com.scaler.dto.ProductRequestDTO;
 import com.scaler.dto.ProductResponseDTO;
+import com.scaler.exception.OutOfStockException;
+import com.scaler.exception.ProductNotFoundException;
 import com.scaler.pojo.Product;
 import com.scaler.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +34,33 @@ public class ProductService {
 
     public ProductResponseDTO getProductById(int id){
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product Not Found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
 
         return ProductResponseDTO.builder()
                 .id(product.getId())
                 .name(product.getName())
                 .price(product.getPrice())
                 .quantity(product.getQuantity())
+                .build();
+    }
+
+    public ProductResponseDTO reduceQuantity(int id){
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
+
+        if(product.getQuantity() <= 0){
+            throw new OutOfStockException("Out of Stock");
+        }
+
+        product.setQuantity(product.getQuantity() - 1);
+
+        Product updatedProduct = productRepository.save(product);
+
+        return ProductResponseDTO.builder()
+                .id(updatedProduct.getId())
+                .name(updatedProduct.getName())
+                .price(updatedProduct.getPrice())
+                .quantity(updatedProduct.getQuantity())
                 .build();
     }
 }

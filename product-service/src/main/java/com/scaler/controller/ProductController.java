@@ -27,4 +27,9 @@ public class ProductController {
     public ResponseEntity<ProductResponseDTO> getProduct(@PathVariable int id){
         return ResponseEntity.ok(productService.getProductById(id));
     }
+
+    @PutMapping("/{id}/reduce")
+    public ResponseEntity<ProductResponseDTO> reduceQuantity(@PathVariable int id){
+        return ResponseEntity.ok(productService.reduceQuantity(id));
+    }
 }
