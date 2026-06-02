@@ -3,9 +3,11 @@ package com.scaler.service;
 import com.netflix.discovery.converters.Auto;
 import com.scaler.client.ProductClient;
 import com.scaler.client.UserClient;
+import com.scaler.dto.OrderCreatedEvent;
 import com.scaler.dto.OrderResponseDTO;
 import com.scaler.dto.ProductResponseDTO;
 import com.scaler.dto.UserResponseDTO;
+import com.scaler.producer.OrderEventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -16,8 +18,12 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 public class OrderService {
     @Autowired
     private UserClient userClient;
+
     @Autowired
     private ProductClient productClient;
+
+    @Autowired
+    private OrderEventProducer orderEventProducer;
 
     @RateLimiter(name="orderService",fallbackMethod = "rateLimiterFallback")
     @Retry(name="userService" , fallbackMethod = "userServiceFallback")
@@ -33,6 +39,20 @@ public class OrderService {
         }
 
         ProductResponseDTO updatedProduct = productClient.reduceQuantity(productId);
+
+
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                userResponseDTO.getId(),
+                userResponseDTO.getName(),
+                updatedProduct.getId(),
+                updatedProduct.getName(),
+                updatedProduct.getPrice(),
+                "Order Created Successfully"
+        );
+
+        orderEventProducer.publishOrderCreatedEvent(event);
+        System.out.println("Sending Event To Kafka...");
+
 
         return new OrderResponseDTO(
                 userResponseDTO.getId(),
