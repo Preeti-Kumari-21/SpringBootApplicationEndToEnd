@@ -1,12 +1,10 @@
 package com.scaler.service;
 
 import com.netflix.discovery.converters.Auto;
+import com.scaler.client.PaymentClient;
 import com.scaler.client.ProductClient;
 import com.scaler.client.UserClient;
-import com.scaler.dto.OrderCreatedEvent;
-import com.scaler.dto.OrderResponseDTO;
-import com.scaler.dto.ProductResponseDTO;
-import com.scaler.dto.UserResponseDTO;
+import com.scaler.dto.*;
 import com.scaler.producer.OrderEventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +21,9 @@ public class OrderService {
     private ProductClient productClient;
 
     @Autowired
+    private PaymentClient paymentClient;
+
+    @Autowired
     private OrderEventProducer orderEventProducer;
 
     @RateLimiter(name="orderService",fallbackMethod = "rateLimiterFallback")
@@ -33,6 +34,21 @@ public class OrderService {
         UserResponseDTO userResponseDTO = userClient.getUserById(userId);
 
         ProductResponseDTO productResponseDTO = productClient.getProductById(productId);
+
+        System.out.println("Calling Payment Service...");
+
+        PaymentRequestDTO paymentRequestDTO = new PaymentRequestDTO(
+                userId,
+                productResponseDTO.getPrice()
+        );
+
+        PaymentResponseDTO paymentResponseDTO = paymentClient.makePayment(paymentRequestDTO);
+
+        if(!paymentResponseDTO.getStatus().equals("SUCCESS")){
+            throw new RuntimeException("Payment Failed");
+        }
+
+        System.out.println("Payment Successful");
 
         if(productResponseDTO.getQuantity() <= 0){
             throw new RuntimeException("Product out of stock");
