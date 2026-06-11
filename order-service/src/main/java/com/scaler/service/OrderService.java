@@ -5,6 +5,7 @@ import com.scaler.client.PaymentClient;
 import com.scaler.client.ProductClient;
 import com.scaler.client.UserClient;
 import com.scaler.dto.*;
+import com.scaler.exception.PaymentFailedException;
 import com.scaler.producer.OrderEventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class OrderService {
     @Autowired
     private OrderEventProducer orderEventProducer;
 
-    @RateLimiter(name="orderService",fallbackMethod = "rateLimiterFallback")
+   // @RateLimiter(name="orderService",fallbackMethod = "rateLimiterFallback")
     @Retry(name="userService" , fallbackMethod = "userServiceFallback")
     @CircuitBreaker(name="userService")
     public OrderResponseDTO createOrder(int userId, int productId){
@@ -45,7 +46,15 @@ public class OrderService {
         PaymentResponseDTO paymentResponseDTO = paymentClient.makePayment(paymentRequestDTO);
 
         if(!paymentResponseDTO.getStatus().equals("SUCCESS")){
-            throw new RuntimeException("Payment Failed");
+            ///throw new PaymentFailedException("Payment Failed");
+        return new OrderResponseDTO(
+                userId,
+                userResponseDTO.getName(),
+                productId,
+                productResponseDTO.getName(),
+                productResponseDTO.getPrice(),
+                "Payment Failed"
+        );
         }
 
         System.out.println("Payment Successful");

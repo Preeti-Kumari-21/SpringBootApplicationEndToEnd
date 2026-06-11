@@ -12,10 +12,20 @@ public class PaymentService {
         System.out.println("User Id : "+requestDTO.getUserId());
         System.out.println("Amount : "+requestDTO.getAmount());
 
+    if(requestDTO.getAmount() >= 100000){
+        System.out.println("Payment Failed as the amount is greater than or equal to 100000");
         return new PaymentResponseDTO(
-                101,
-                "SUCCESS",
+                0,
+                "FAILED",
                 requestDTO.getAmount()
         );
+      }
+    System.out.println("Payment Successfull...");
+
+    return new PaymentResponseDTO(
+            101,
+            "SUCCESS",
+            requestDTO.getAmount()
+     );
     }
 }
